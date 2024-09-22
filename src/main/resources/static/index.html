@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern SSE Stopwatch</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+			background: rgb(41,40,40);
+			background: linear-gradient(90deg, rgba(41,40,40,1) 0%, rgba(0,0,0,1) 35%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 360px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        #events {
+            height: 200px;
+            overflow-y: auto;
+            border: none;
+            padding: 20px;
+            background-color: #f0f4f8;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+            font-size: 16px;
+            color: #333;
+        }
+
+        .event {
+            padding: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .error {
+            color: #e53935;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+        #status {
+            font-weight: bold;
+            color: #43a047;
+        }
+
+        /* Smooth fade-in animation */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Scrollbar styling */
+        #events::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #events::-webkit-scrollbar-thumb {
+            background-color: #bbb;
+            border-radius: 4px;
+        }
+
+        #events::-webkit-scrollbar-thumb:hover {
+            background-color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cronômetro em Tempo Real</h1>
+        <div id="events">Esperando por eventos...</div>
+        <div id="error" class="error"></div>
+        <div class="footer">
+            <p>Status da Conexão SSE: <span id="status">Conectando...</span></p>
+        </div>
+    </div>
+
+    <script>
+        const eventSource = new EventSource("/sse"); // Atualize o endpoint se necessário
+        const eventsContainer = document.getElementById("events");
+        const errorContainer = document.getElementById("error");
+        const statusContainer = document.getElementById("status");
+
+        // Função para adicionar eventos recebidos
+        const addEvent = (message) => {
+            const div = document.createElement("div");
+            div.classList.add("event", "fade-in");
+            div.textContent = message;
+            eventsContainer.appendChild(div);
+            eventsContainer.scrollTop = eventsContainer.scrollHeight; // Scroll automático para o final
+        };
+
+        eventSource.onmessage = (event) => {
+            addEvent(`Tempo decorrido: ${event.data}`);
+            statusContainer.textContent = "Conectado";
+        };
+
+        eventSource.onerror = (error) => {
+            errorContainer.textContent = "Erro: Não foi possível conectar ao SSE";
+            statusContainer.textContent = "Desconectado";
+            eventSource.close();
+        };
+
+        eventSource.onopen = () => {
+            statusContainer.textContent = "Conectado";
+            errorContainer.textContent = ""; // Limpa qualquer mensagem de erro anterior
+        };
+    </script>
+</body>
+</html>
